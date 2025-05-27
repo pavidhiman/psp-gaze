@@ -46,7 +46,7 @@ class PSPGazeMetrics:
             if dt <= 0:
                 return 
 
-            vel = (v - v0) / dict
+            vel = (v - v0) / dt
             
             #saccade
             if abs(vel) > self.vel_thresh:
