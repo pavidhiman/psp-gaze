@@ -12,8 +12,8 @@ class PSPGazeMetrics:
         self.jitter_thresh = jitter_thresh
         
         #store events
-        self.saccades = []
-        self.jitters = []
+        self.saccades = [] #stores start time, end time, amplitude, velocity
+        self.jitters = [] #stores time and magnitude 
     
     def update (self, frame):
         #returns dict of current raw ratios and new PSP events by calling each video frame
