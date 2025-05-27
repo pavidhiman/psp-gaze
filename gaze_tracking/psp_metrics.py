@@ -35,22 +35,24 @@ class PSPGazeMetrics:
             'blink':      self.gaze.is_blinking()
         }
         
-        def _check_events(self, t, v):
-            """
-            Last 2 entires and detect
-            1. vertical saccade = |Δv/Δt| > vel_thresh
-            2. fixation jitter = vel_thresh > |Δv/Δt| > jitter_thresh
-            """
-            t0, _, v0 = self.buf[-1]
-            dt = t - t0
-            if dt <= 0:
-                return 
+    def _check_events(self, t, v):
+        if not self.buf:
+            return
 
-            vel = (v - v0) / dt
-            
-            #saccade
-            if abs(vel) > self.vel_thresh:
-                amp = abs(v - v0)
-                self.saccades.append((t0, t, amp, vel))
-            elif abs(vel) > self.jitter_thresh:
-                self.jitters.append((t, vel))
+        t0, _, v0 = self.buf[-1]
+
+        # Skip if last value was invalid
+        if v0 is None or v is None:
+            return
+
+        dt = t - t0
+        if dt <= 0:
+            return
+
+        vel = (v - v0) / dt
+
+        if abs(vel) > self.vel_thresh:
+            amp = abs(v - v0)
+            self.saccades.append((t0, t, amp, vel))
+        elif abs(vel) > self.jitter_thresh:
+            self.jitters.append((t, vel))

@@ -5,7 +5,6 @@ from gaze_tracking.calibration import Calibration
 from gaze_tracking.psp_metrics import PSPGazeMetrics
 
 calib = Calibration()
-calib.run()
 gaze = GazeTracking()
 psp = PSPGazeMetrics(gaze, calib)
 
@@ -35,8 +34,9 @@ try:
         csvfile.flush()
 
         out = gaze.annotated_frame()
-        cv2.putText(out, f"V-sac: {sac[2]:.2f}/{sac[3]:.2f}", (10,30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
+        if sac[2] is not None and sac[3] is not None:
+            cv2.putText(out, f"V-sac: {sac[2]:.2f}/{sac[3]:.2f}", (10,30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
         cv2.imshow("PSP Gaze", out)
         if cv2.waitKey(1)==27:
             break
