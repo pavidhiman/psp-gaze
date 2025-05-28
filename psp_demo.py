@@ -6,7 +6,7 @@ from gaze_tracking.psp_metrics import PSPGazeMetrics
 
 calib = Calibration()
 gaze = GazeTracking()
-psp = PSPGazeMetrics(gaze, calib)
+psp = PSPGazeMetrics(gaze, calib, debug=True)
 
 cap = cv2.VideoCapture(0)
 csvfile = open('psp_data.csv', 'w', newline = '')

@@ -4,16 +4,18 @@ from collections import deque
 class PSPGazeMetrics:
     #raw gaze ratios and timesteps, detects vertical saccades and fixation jitters
     
-    def __init__(self, gaze, calib, history_len=30, vel_thresh=0.5, jitter_thresh=0.05):
-        self.gaze = gaze
-        self.calib = calib
-        self.buf = deque(maxlen=history_len)
-        self.vel_thresh = vel_thresh
-        self.jitter_thresh = jitter_thresh
-        
-        #store events
-        self.saccades = [] #stores start time, end time, amplitude, velocity
-        self.jitters = [] #stores time and magnitude 
+    def __init__(self, gaze, calib, history_len=30, vel_thresh=0.5, jitter_thresh=0.05, debug=False):
+         self.gaze = gaze
+         self.calib = calib
+         self.buf = deque(maxlen=history_len)
+         self.vel_thresh = vel_thresh
+         self.jitter_thresh = jitter_thresh
+         self.debug = debug
+
+         #store events
+         self.saccades = []
+         self.jitters = []
+
     
     def update (self, frame):
         #returns dict of current raw ratios and new PSP events by calling each video frame
@@ -36,23 +38,27 @@ class PSPGazeMetrics:
         }
         
     def _check_events(self, t, v):
-        if not self.buf:
-            return
-
         t0, _, v0 = self.buf[-1]
-
-        # Skip if last value was invalid
-        if v0 is None or v is None:
+        
+        if v is None or v0 is None:
             return
 
         dt = t - t0
         if dt <= 0:
-            return
+            return 
 
         vel = (v - v0) / dt
+        amp = abs(v - v0)
+
+        if self.debug:
+            print(f"[DEBUG] Δv={v - v0:.3f}, Δt={dt:.3f}, vel={vel:.3f}")
 
         if abs(vel) > self.vel_thresh:
-            amp = abs(v - v0)
             self.saccades.append((t0, t, amp, vel))
+            if self.debug:
+                print(f"[SACCADE DETECTED] amp={amp:.3f}, vel={vel:.3f}")
         elif abs(vel) > self.jitter_thresh:
             self.jitters.append((t, vel))
+            if self.debug:
+                print(f"[JITTER DETECTED] vel={vel:.3f}")
+
