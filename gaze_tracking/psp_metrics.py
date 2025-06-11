@@ -2,19 +2,32 @@ import time
 from collections import deque 
 
 class PSPGazeMetrics:
-    #raw gaze ratios and timesteps, detects vertical saccades and fixation jitters
+    # buffers the gaze, detects saccades and jitters on both axes 
+    # storing structure - (t_start, t_end, amp, peak_vel, axis)
     
-    def __init__(self, gaze, calib, history_len=30, vel_thresh=0.5, jitter_thresh=0.05, debug=False):
-         self.gaze = gaze
-         self.calib = calib
-         self.buf = deque(maxlen=history_len)
-         self.vel_thresh = vel_thresh
-         self.jitter_thresh = jitter_thresh
-         self.debug = debug
-
-         #store events
-         self.saccades = []
-         self.jitters = []
+    def __init__(
+         self, 
+         gaze, 
+         history_len: int = 30, 
+         vel_thresh: float = 0.5, 
+         jitter_thresh: float = 0.05, 
+         blink_skip_frames: int = 3, # ignores 3 frames after a blink
+         debug: bool = False,
+    ):
+        self.gaze = gaze
+        self.buf = deque(maxlen=history_len)
+        self.vel_thresh = vel_thresh
+        self.jitter_thresh = jitter_thresh
+        self.blink_skip_frames = blink_skip_frames
+        self._blink_cooldown = 0
+        self.debug = debug
+        
+        # logging
+        self.vert_saccades = []
+        self.horiz_saccades = []
+        self.jitters = []
+        
+        
 
     
     def update (self, frame):
