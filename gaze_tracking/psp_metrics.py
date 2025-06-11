@@ -1,5 +1,6 @@
 import time 
 from collections import deque 
+from .logger import EventLogger 
 
 class PSPGazeMetrics:
     # buffers the gaze, detects saccades and jitters on both axes 
@@ -13,6 +14,8 @@ class PSPGazeMetrics:
          jitter_thresh: float = 0.05, 
          blink_skip_frames: int = 3, # ignores 3 frames after a blink
          debug: bool = False,
+         logger=None, 
+         save_on_exit=True
     ):
         self.gaze = gaze
         self.buf = deque(maxlen=history_len)
@@ -21,6 +24,8 @@ class PSPGazeMetrics:
         self.blink_skip_frames = blink_skip_frames
         self._blink_cooldown = 0
         self.debug = debug
+        self.logger = logger or EventLogger()
+        self.save_on_exit = save_on_exit
         
         # logging
         self.vert_saccades = []
@@ -46,6 +51,7 @@ class PSPGazeMetrics:
         
         if h is None or v is None:
             return self._snapshot(h, v) # ie, missing data
+        self.logger.log_frame(t, h, v, self.gaze.is_blinking())
         
         if self.buf:
             self._check_axis(t, "H", h)
@@ -86,6 +92,7 @@ class PSPGazeMetrics:
         # classify
         if abs(vel) > self.vel_thresh:
             rec = (t0, t, amp, vel, axis)
+            self.logger.log_event(t0, t, amp, vel, axis, "SACCADE")
             if axis == "H":
                 self.horiz_saccades.append(rec)
             else:
@@ -94,5 +101,6 @@ class PSPGazeMetrics:
                 print(f"[{axis}] SACCADE amp={amp:.3f} vel={vel:.3f}")
         elif abs(vel) > self.jitter_thresh:
             self.jitters.append((t, vel, axis))
+            self.logger.log_event(t0, t, amp, vel, axis, "JITTER")
             if self.debug:
                 print(f"[{axis}] JITTER vel={vel:.3f}")
