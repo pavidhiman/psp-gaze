@@ -104,3 +104,7 @@ class PSPGazeMetrics:
             self.logger.log_event(t0, t, amp, vel, axis, "JITTER")
             if self.debug:
                 print(f"[{axis}] JITTER vel={vel:.3f}")
+                
+        def __del__(self):
+            if self.save_on_exit:
+                self.logger.to_csv()
